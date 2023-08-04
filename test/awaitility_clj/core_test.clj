@@ -1,62 +1,46 @@
 (ns awaitility-clj.core-test
   (:require
-    [clojure.test :refer [deftest is testing]]
-    [awaitility-clj.core :refer
-     [absolute? path ends-with? query-map params query without-query]]))
+    [awaitility-clj.core :refer [wait-for]]
+    [clojure.test :refer [deftest is testing]])
+  (:import
+    (org.awaitility.core
+      ConditionTimeoutException)))
 
-(deftest absolute-should-not-throw
-  (testing "absolute? should not throw"
-    (testing "with valid data"
-      (is (absolute? "https://example.com")))
-    (testing "with nil"
-      (is (nil? (absolute? nil))))
-    (testing "with other data types"
-      (is (nil? (absolute? 123)))
-      (is (nil? (absolute? [])))
-      (is (nil? (absolute? {}))))))
+(deftest wait-for-waits-until-condition-is-true
+  (testing "wait-for waits until condition is true"
+    (let [start-time (System/currentTimeMillis)
+          end-time (+ start-time 200)]
+      (wait-for {:at-most [1 :seconds]}
+                (fn [] (>= (System/currentTimeMillis) end-time)))
+      (is (>= (System/currentTimeMillis) end-time)))))
 
-(deftest ends-with-should-not-throw
-  (testing "ends-with? should not throw"
-    (testing "with valid data"
-      (is (ends-with? "https://example.com" "com")))
-    (testing "with nil"
-      (is (nil? (absolute? nil))))))
+(deftest wait-for-throws-exception-if-condition-times-out
+  (testing "wait-for throws ConditionTimeoutException if condition times out"
+    (let [start-time (System/currentTimeMillis)
+          end-time (+ start-time 1500)]
+      (is (thrown?
+            ConditionTimeoutException
+            (wait-for
+              {:at-most [200 :milliseconds]}
+              (fn [] (>= (System/currentTimeMillis) end-time))))))))
 
-(deftest path-should-not-throw
-  (testing "path should not throw"
-    (testing "with valid data"
-      (is (path "https://example.com/foo")))
-    (testing "with nil"
-      (is (nil? (path nil))))))
-
-(deftest query-map-should-not-throw
-  (testing "query-map should not throw"
-    (testing "with valid data"
-      (is (query-map "https://example.com"))
-      (is (query-map "https://example.com?foo=bar")))
-    (testing "with nil"
-      (is (nil? (query-map nil))))))
-
-(deftest params-should-not-throw
-  (testing "params should not throw"
-    (testing "with valid data"
-      (is (params "https://example.com?foo=bar" "foo"))
-      (is (params "https://example.com?foo=bar")))
-    (testing "with nil"
-      (is (nil? (params nil nil)))
-      (is (nil? (params nil))))))
-
-(deftest query-should-not-throw
-  (testing "query should not throw"
-    (testing "with valid data"
-      (is (query "https://example.com" nil))
-      (is (query "https://example.com?foo=bar" "?test=param")))
-    (testing "with nil"
-      (is (nil? (query nil nil))))))
-
-(deftest without-query-removes-query-string
-  (testing "without-query removes query string"
-    (testing "with valid data"
-      (is (= (without-query "https://example.com?foo=bar") "https://example.com")))
-    (testing "with nil"
-      (is (nil? (without-query nil))))))
+(deftest wait-for-poll-intervals
+  (testing "wait-for uses default poll interval if none set"
+    (let [start-time (System/currentTimeMillis)
+          end-time (+ start-time 300)
+          calls (atom 0)]
+      (wait-for {:at-most [1 :seconds]}
+                (fn []
+                  (swap! calls inc)
+                  (>= (System/currentTimeMillis) end-time)))
+      (is (= 3 @calls))))
+  (testing "wait-for uses poll interval if set"
+    (let [start-time (System/currentTimeMillis)
+          end-time (+ start-time 190)
+          calls (atom 0)]
+      (wait-for {:at-most [1 :seconds]
+                 :poll-interval [50 :milliseconds]}
+                (fn []
+                  (swap! calls inc)
+                  (>= (System/currentTimeMillis) end-time)))
+      (is (= 4 @calls)))))

@@ -1,42 +1,36 @@
 (ns awaitility-clj.core
-  (:require
-    [clojure.string :as str]
-    [org.bovinegenius.exploding-fish :as ef]))
+  (:import
+    (java.time
+      Duration)
+    (java.time.temporal
+      ChronoUnit)
+    (org.awaitility
+      Awaitility)
+    (org.awaitility.core
+      ConditionFactory)))
 
-(defn absolute?
-  [uri]
-  (try (ef/absolute? uri)
-       (catch Exception _)))
+(defn- keyword->chrono-unit
+  [keyword]
+  (case keyword
+    :seconds ChronoUnit/SECONDS
+    :milliseconds ChronoUnit/MILLIS))
 
-(defn ends-with?
-  [^CharSequence s ^String substr]
-  (try (str/ends-with? s substr)
-       (catch Exception _)))
+(defn- tuple->duration
+  [[amount unit]]
+  (Duration/of amount (keyword->chrono-unit unit)))
 
-(defn path
-  [uri]
-  (try (ef/path uri)
-       (catch Exception _)))
+(defn- apply-option
+  [^ConditionFactory factory [option-key option-data]]
+  (case option-key
+    :at-most (.atMost factory ^Duration (tuple->duration option-data))
+    :poll-interval (.pollInterval factory ^Duration (tuple->duration option-data))))
 
-(defn query-map
-  [uri]
-  (try (ef/query-map uri)
-       (catch Exception _)))
+(defn- apply-options
+  [^ConditionFactory factory options]
+  (reduce apply-option factory options))
 
-(defn params
-  ([uri]
-   (try (ef/params uri)
-        (catch Exception _)))
-  ([uri param-key]
-   (try (ef/params uri param-key)
-        (catch Exception _))))
-
-(defn query
-  [uri new-query]
-  (try (ef/query uri new-query)
-       (catch Exception _)))
-
-(defn without-query
-  [uri]
-  (try (ef/query uri nil)
-       (catch Exception _)))
+(defn wait-for
+  [options until-fn]
+  (-> (Awaitility/await)
+      (apply-options options)
+      (.until until-fn)))

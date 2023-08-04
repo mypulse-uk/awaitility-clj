@@ -10,7 +10,7 @@
             :url "https://opensource.org/licenses/MIT"}
 
   :dependencies [[org.clojure/clojure "1.11.1"]
-                 [org.bovinegenius/exploding-fish "0.3.6"]]
+                 [org.awaitility/awaitility "4.2.0"]]
 
   :plugins [[lein-cloverage "1.2.3"]
             [lein-shell "0.5.0"]
@@ -24,7 +24,7 @@
   :profiles
   {:shared {:dependencies
             [[org.clojure/clojure "1.11.1"]
-             [eftest "0.5.9"]]}
+             [eftest "0.6.0"]]}
    :dev [:shared {:source-paths ["dev"]
                   :eftest {:multithread? false}}]
    :test [:shared {:eftest {:multithread? false}}]
