@@ -10,8 +10,8 @@
       ConditionFactory)))
 
 (defn- keyword->chrono-unit
-  [keyword]
-  (case keyword
+  [keyword-unit]
+  (case keyword-unit
     :seconds ChronoUnit/SECONDS
     :milliseconds ChronoUnit/MILLIS))
 
