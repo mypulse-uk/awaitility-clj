@@ -209,6 +209,6 @@ namespace :ci do
     t.concourse_url = args[:concourse_url]
     t.config = "pipelines/pipeline.yaml"
     t.non_interactive = true
-    t.home_directory = 'build/fly'
+
   end
 end

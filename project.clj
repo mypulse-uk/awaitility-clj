@@ -3,7 +3,7 @@
       "0.0.0"))
 
 (defproject ai.mypulse/awaitility-clj version
-  :description "TODO: Replace this awaitility-clj description with your open source library description."
+  :description "Clojure wrapper for the Awaitility Java library."
   :url "https://github.com/mypulse-uk/awaitility-clj"
 
   :license {:name "The MIT License"
